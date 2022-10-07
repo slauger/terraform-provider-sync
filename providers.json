@@ -1,0 +1,33 @@
+{
+  "directory": ".",
+  "providers": {
+    "terraform-provider-local": {
+      "url": "hashicorp/local",
+      "since": "2.2.0"
+    },
+    "terraform-provider-acme": {
+      "url": "vancluever/acme",
+      "since": "2.10.0"
+    },
+    "terraform-provider-vault": {
+      "url": "hashicorp/vault",
+      "since": "3.8.0"
+    },
+    "terraform-provider-tls": {
+      "url": "hashicorp/tls",
+      "since": "4.0.0"
+    },
+    "terraform-provider-kubernetes": {
+      "url": "hashicorp/kubernetes",
+      "since": "2.13.0"
+    },
+    "terraform-provider-null": {
+      "url": "hashicorp/null",
+      "since": "3.1.0"
+    },
+    "terraform-provider-random": {
+      "url": "hashicorp/local",
+      "since": "3.4.0"
+    }
+  }
+}
