@@ -58,6 +58,8 @@ provider_installation {
 }
 ```
 
+The creation of hashsums to verify the download on the client side is not yet implemented (but planned).
+
 ## Requirements
 
 - python3-requests
