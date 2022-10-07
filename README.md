@@ -46,6 +46,18 @@ To reduce the required storage size you can use the `since` field to set a seman
 
 *Important:* in some rare case it could be that packages are removed from `registry.terraform.io`, even if they are displayed in the API response. In this case you can use the `exclude` field to exclude this version from the download.
 
+## Use your mirror
+
+Just create a file `~/.terraformrc` and put in the URL to your local mirror.
+
+```
+provider_installation {
+  network_mirror {
+    url = "https://terraform-registry.example.com/"
+  }
+}
+```
+
 ## Requirements
 
 - python3-requests
