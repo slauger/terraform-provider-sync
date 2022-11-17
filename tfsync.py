@@ -34,6 +34,10 @@ args = parser.parse_args()
 with open(args.config, 'r') as f:
   config = json.load(f)
 
+platforms = [
+ {'os': 'linux', 'arch': 'amd64'}
+]
+
 version_api = 'https://registry.terraform.io/v1/providers/{}/versions'
 
 # mirror dir
@@ -63,52 +67,55 @@ for provider in config['providers']:
   if not os.path.isdir(provider_path):
     os.mkdir(provider_path)
 
-  # loop for the provider versions
-  for version in provider_versions['versions']:
-    # exclude alpha, beta and rc releases
-    if not re.match('^[0-9]+\.[0-9]+\.[0-9]+$', version['version']):
-      continue
-
-    # excluded versions from config
-    if 'exclude' in config['providers'][provider]:
-      if version['version'] in config['providers'][provider]['exclude']:
+  for platform in platforms:
+    # loop for the provider versions
+    for version in provider_versions['versions']:
+      # exclude alpha, beta and rc releases
+      if not re.match('^[0-9]+\.[0-9]+\.[0-9]+$', version['version']):
         continue
 
-    # honor since setting in json file
-    if 'since' in config['providers'][provider]:
-      if version['version'] != config['providers'][provider]['since']:
-        if version_parser.parse(version['version']) < version_parser.parse(config['providers'][provider]['since']):
+      # excluded versions from config
+      if 'exclude' in config['providers'][provider]:
+        if version['version'] in config['providers'][provider]['exclude']:
           continue
 
-    versions[version['version']] = {}
+      # honor since setting in json file
+      if 'since' in config['providers'][provider]:
+        if version['version'] != config['providers'][provider]['since']:
+          if version_parser.parse(version['version']) < version_parser.parse(config['providers'][provider]['since']):
+            continue
 
-    version_archive = '{}_{}_linux_amd64.zip'.format(provider, version['version'])
-    archive_path    = '{}/{}'.format(provider_path, version_archive)
-    archive_url     = 'https://releases.hashicorp.com/{}/{}/{}_{}_linux_amd64.zip'.format(provider, version['version'], provider, version['version'])
+      versions[version['version']] = {}
 
-    if not os.path.isfile(archive_path):
-      print("download {} to {}".format(archive_url, archive_path))
+      metadata_url = 'https://registry.terraform.io/v1/providers/{}/{}/download/linux/amd64'.format(provider_url, version['version'], platform['os'], platform['arch'])
+      metadata     = requests.get(metadata_url).json()
 
-      # from subprocess import check_output
-      if not args.dryrun:
-        download = check_output([
-          'curl', '-fsLo', archive_path, archive_url
-        ])
-    else:
-      print('{} already present'.format(archive_path))
+      archive_path = "{}/{}".format(provider_path, metadata['filename'])
+      archive_url  = metadata['download_url']
+
+      if not os.path.isfile(archive_path):
+        print("download {} to {}".format(archive_url, archive_path))
+
+        # from subprocess import check_output
+        if not args.dryrun:
+          download = check_output([
+            'curl', '-fsLo', archive_path, archive_url
+          ])
+      else:
+        print('{} already present'.format(archive_path))
     
-    content = {
-      'archives': {
-        'linux_amd64': {
-          'url': '{}_{}_linux_amd64.zip'.format(provider, version['version']),
+      content = {
+        'archives': {
+          'linux_amd64': {
+            'url': '{}_{}_linux_amd64.zip'.format(provider, version['version']),
+          }
         }
       }
-    }
 
-    with open('{}/{}.json'.format(provider_path, version['version']), 'w') as f:
-      f.write(json.dumps(content))
+      with open('{}/{}.json'.format(provider_path, version['version']), 'w') as f:
+        f.write(json.dumps(content))
 
-  # write index.json
-  with open('{}/index.json'.format(provider_path), 'w') as f:
-    f.write(json.dumps({'versions': versions}))
+    # write index.json
+    with open('{}/index.json'.format(provider_path), 'w') as f:
+      f.write(json.dumps({'versions': versions}))
 
